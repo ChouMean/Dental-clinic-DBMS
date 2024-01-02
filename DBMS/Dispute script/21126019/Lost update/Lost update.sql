@@ -1,0 +1,17 @@
+﻿USE dcBooking
+GO
+
+CREATE PROCEDURE sp_datLichHen
+AS
+BEGIN TRANSACTION
+    BEGIN TRY
+        
+    END TRY
+    BEGIN CATCH
+        PRINT N'Lỗi hệ thống'
+        ROLLBACK TRANSACTION
+        RETURN 0
+    END CATCH
+COMMIT TRANSACTION
+RETURN 1
+GO

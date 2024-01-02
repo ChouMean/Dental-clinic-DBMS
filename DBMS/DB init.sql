@@ -1,21 +1,21 @@
 USE dcBooking
 GO
 
-INSERT INTO VAITRO (MAVT, TENVT)
+INSERT INTO VAITRO (TENVT)
 VALUES
-	('QT', N'Quản trị viên'),
-	('NS', N'Nha sĩ'),
-	('NV', N'Nhân viên'),
-	('KH', N'Khách hàng')
+	(N'Quản trị viên'),
+	(N'Nha sĩ'),
+	(N'Nhân viên'),
+	(N'Khách hàng')
 GO
 
 INSERT INTO TAIKHOAN (SDT, MK, MAVT)
 VALUES
-	('0338540248', '21126030', 'QT'),
-	('0916702097', '21126019', 'NS'),
-	('0931858601', '21126071', 'NV'),
-	('0975463191', '21126073', 'KH'),
-	('0975463192', '21126074', 'KH')
+	('0338540248', '21126030', 1),
+	('0916702097', '21126019', 2),
+	('0931858601', '21126071', 3),
+	('0975463191', '21126073', 4),
+	('0975463192', '21126074', 4)
 GO
 
 INSERT INTO QUANTRIVIEN (MATK, HOTEN)
@@ -49,9 +49,10 @@ GO
 
 INSERT INTO THUOC (TENTHUOC, DONVITINH, CHIDINH, NGAYHETHAN, SLKHO, DONGIA)
 VALUES
-	(N'0', N'Viên', N'Uống', '2023-12-31', 100, 10),
-	(N'1', N'Tuýp', N'Bôi', '2023-12-31', 100, 10),
-	(N'2', N'Viên', N'Uống', '2023-12-31', 100, 10)
+	(N'Paracetamol', N'Viên', N'Uống', '2024-12-31', 100, 10),
+	(N'Oxi già', N'Tuýp', N'Bôi', '2024-12-31', 100, 10),
+	(N'Aataflam', N'Viên', N'Uống', '2024-12-31', 100, 10),
+	(N'Aspirin', N'Viên', N'Uống', '2024-12-31', 100, 10)
 GO
 
 INSERT INTO LICHSUKHAM (MAKH, MANS, GHICHU)

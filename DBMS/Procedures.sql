@@ -1,53 +1,42 @@
-﻿CREATE DATABASE dcBooking
-GO
-USE dcBooking
+﻿USE dcBooking
 GO
 
--- Kiểm tra thông tin ngày sinh khách hàng
 -- Kiểm tra nếu khách hàng đã đặt lịch sẽ không thể đổi lịch làm việc
+-- Kiểm tra tình trạng hoạt động của tk
+-- CHECK KETTHUC > BATDAU (LICHLAMVIEC)
 
-CREATE PROC sp_DangNhap
-	@SDT PHONE,
-	@MK MTEXT,
-	@MATK INT OUTPUT,
-	@MAVT INT OUTPUT
-AS
-BEGIN
-	SET @MATK = NULL
-	SET @MAVT = NULL
+Đăng nhập
+Đăng ký
+Xem thuốc
+Xem lịch sử khám
 
-	IF NOT EXISTS (
-		SELECT SDT = @SDT
-		FROM TAIKHOAN
-	)
-		BEGIN
-			PRINT N'Không tìm thấy tài khoản'
-			RETURN 0
-		END
-	ELSE
-	IF NOT EXISTS (
-		SELECT SDT = @SDT, MK = @MK
-		FROM TAIKHOAN
-	)
-		BEGIN
-			PRINT N'Sai mật khẩu'
-			RETURN 0
-		END
-    
-	SELECT @MATK = MATK, @MAVT = MAVT
-	FROM TAIKHOAN
-    WHERE SDT = @SDT AND MK = @MK
+QTV - Thêm / xoá tài khoản
+QTV - Sửa tài khoản
+QTV - Xem thuốc
+QTV - Tìm thuốc hết hạn
+QTV - Xoá thuốc
+QTV - Xoá thuốc hết hạn
+QTV - Cập nhật thuốc
+QTV 
 
-    PRINT N'Đăng nhập thành công'
-    RETURN 1
-END
+Khách hàng - Đăng ký
+Khách hàng - Đặt lịch hẹn
+Khách hàng - Xem lịch hẹn
+Khách hàng - Xem lịch sử khám
+
+
+
+
+DROP PROC sp_DangNhap
 GO
 
-DECLARE @SDT PHONE = '0338540248'
-DECLARE @MK MTEXT = '21126030'
+
+
+DECLARE @SDT PHONE = '0975463191'
+DECLARE @MK MTEXT = '21126073'
 DECLARE @MATK INT
 DECLARE @MAVT INT
 
 EXEC sp_DangNhap @SDT, @MK, @MATK OUTPUT, @MAVT OUTPUT
-PRINT N'Mã tài khoản: ' + CAST(@MATK AS INT)
-PRINT N'Vai trò: ' + CAST(@MAVT AS INT)
+PRINT N'Mã tài khoản: ' + CAST (@MATK AS VARCHAR(10))
+PRINT N'Vai trò: ' + CAST (@MAVT AS VARCHAR(10))
