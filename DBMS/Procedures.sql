@@ -9,6 +9,7 @@ CREATE PROCEDURE sp_xuatHoaDon
 AS
 BEGIN TRANSACTION
     BEGIN TRY
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED
         IF NOT EXISTS (
             SELECT * FROM KHACHHANG
             WHERE MAKH = @MAKH
@@ -141,7 +142,7 @@ BEGIN TRANSACTION
         END
 
         INSERT INTO LICHHEN (MAKH, MANS, THOIGIAN)
-        VALUES (@MAKH, @MANS, THOIGIAN)
+        VALUES (@MAKH, @MANS, @THOIGIAN)
         
         PRINT N'Đã thêm lịch hẹn thành công'
         WAITFOR DELAY '00:00:10'
@@ -250,6 +251,7 @@ CREATE PROCEDURE sp_doiTrangThai
 AS
 BEGIN TRANSACTION
     BEGIN TRY
+        SET TRAN ISOLATION LEVEL READ COMMITTED
         IF NOT EXISTS (
             SELECT * FROM TAIKHOAN
             WHERE SDT = @SDT
@@ -275,7 +277,66 @@ RETURN 1
 GO
 
 -- 21126071
--- 
+-- Dirty read
+CREATE PROCEDURE sp_truyvanThuoc
+AS
+BEGIN TRANSACTION
+    BEGIN TRY
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+        SELECT * FROM THUOC
+        WAITFOR DELAY '00:00:10'
+    END TRY
+    BEGIN CATCH
+        PRINT N'Lỗi hệ thống'
+        ROLLBACK TRANSACTION
+        RETURN 0
+    END CATCH
+COMMIT TRANSACTION
+RETURN 1
+GO
+
+CREATE PROCEDURE sp_suaThuoc
+    @MATH INT,
+    @TENTHUOC AS STEXT,
+    @DONVITINH AS XSTEXT,
+    @CHIDINH AS STEXT,
+    @NGAYHETHAN DATE,
+    @SLKHO INT,
+    @DONGIA FLOAT
+AS
+BEGIN TRANSACTION
+    BEGIN TRY
+        IF @NGAYHETHAN <= GETDATE()
+        BEGIN
+            PRINT N'Không thể thêm thuốc hết hạn'
+            ROLLBACK TRANSACTION
+            RETURN 0
+        END
+        IF @SLKHO < 0
+        BEGIN
+            PRINT N'Không thể thêm số lượng ít hơn 0'
+            ROLLBACK TRANSACTION
+            RETURN 0
+        END
+        UPDATE THUOC WITH (XLOCK)
+        SET
+            TENTHUOC = @TENTHUOC,
+            DONVITINH = @DONVITINH,
+            CHIDINH = @CHIDINH,
+            NGAYHETHAN = @NGAYHETHAN,
+            SLKHO = @SLKHO,
+            DONGIA = @DONGIA
+        WHERE MATH = @MATH
+        PRINT N'Đổi thông tin thuốc thành công'
+    END TRY
+    BEGIN CATCH
+        PRINT N'Lỗi hệ thống'
+        ROLLBACK TRANSACTION
+        RETURN 0
+    END CATCH
+COMMIT TRANSACTION
+RETURN 1
+GO
 
 -- Phantom read
 CREATE TYPE DVSD AS TABLE (
@@ -296,8 +357,8 @@ BEGIN TRANSACTION
     BEGIN TRY
         SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
         IF NOT EXISTS (
-            SELECT MAKH = @MAKH
-            FROM KHACHHANG
+            SELECT * FROM KHACHHANG
+            WHERE MAKH = @MAKH
         )
         BEGIN
             PRINT N'Không tìm thấy khách hàng ' + CAST(@MAKH AS VARCHAR(10))
@@ -306,8 +367,8 @@ BEGIN TRANSACTION
         END
         
         IF NOT EXISTS (
-            SELECT MAKH = @MAKH
-            FROM LICHSUKHAM
+            SELECT * FROM LICHSUKHAM
+            WHERE MAKH = @MAKH
         )
         BEGIN
             PRINT N'Không thấy lịch sử khám của ' + CAST(@MAKH AS VARCHAR(10))
@@ -332,14 +393,14 @@ CREATE PROCEDURE sp_themLSK
     @MAKH INT,
     @MANS INT,
     @GHICHU AS LTEXT,
-    @DVSD AS DVSD,
-    @THSD AS THSD
+    @DVSD AS DVSD READONLY,
+    @THSD AS THSD READONLY
 AS
 BEGIN TRANSACTION
     BEGIN TRY
         IF NOT EXISTS (
-            SELECT SDT = @SDT
-            FROM TAIKHOAN
+            SELECT * FROM KHACHHANG
+            WHERE MAKH = @MAKH
         )
         BEGIN
             PRINT N'Không tìm thấy tài khoản'
@@ -360,8 +421,8 @@ BEGIN TRANSACTION
         FROM @DVSD
 
         INSERT INTO DONTHUOC (MALSK, MATH, SOLUONG, GHICHU)
-        SELECT @MALSK, MADV, SOLUONG, GHICHU
-        FROM @DVSD
+        SELECT @MALSK, MATH, SOLUONG, GHICHU
+        FROM @THSD
 
         PRINT N'Thêm lịch sử khám thành công'
     END TRY

@@ -1,7 +1,5 @@
 ﻿USE dcBooking
 GO
 
-DECLARE @MATK INT
-DECLARE @MK INT
-EXEC sp_DangNhap '0338540248', '21126030', @MATK, @MK
+EXEC sp_truyvanThuoc
 GO
