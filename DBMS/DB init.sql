@@ -82,3 +82,23 @@ VALUES
 	(2, 2, 1, N''),
 	(2, 3, 1, N'')
 GO
+
+INSERT INTO LICHHEN (MAKH, MANS, THOIGIAN)
+VALUES
+	(1, 1, ''),
+	(1, 2, ''),
+	(1, 3, ''),
+	(2, 1, ''),
+	(2, 2, ''),
+	(2, 3, '')
+GO
+
+INSERT INTO DONTHUOC (MANS, BATDAU, KETTHUC)
+VALUES
+	(1, '', ''),
+	(1, '', ''),
+	(1, '', ''),
+	(2, '', ''),
+	(2, '', ''),
+	(2, '', '')
+GO
