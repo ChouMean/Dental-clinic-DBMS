@@ -1,4 +1,12 @@
 USE dcBooking
 GO
-EXEC sp_xemThuoc 4
+
+DECLARE @MAKH INT = 1
+DECLARE @HD_chuaTT INT = (
+    SELECT MAX(MALSK)
+    FROM LICHSUKHAM
+    WHERE MAKH = @MAKH AND THANHTOAN = 0
+)
+
+EXEC sp_xuatHoaDon @MAKH, @HD_chuaTT
 GO

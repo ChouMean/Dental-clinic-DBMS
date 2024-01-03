@@ -11,7 +11,7 @@ BEGIN TRANSACTION
             FROM KHACHHANG
         )
         BEGIN
-            PRINT N'Không tìm thấy khách hàng ' + CAST (@MAKH AS VARCHAR(10))
+            PRINT N'Không tìm thấy khách hàng ' + CAST(@MAKH AS VARCHAR(10))
             ROLLBACK
             RETURN 0
         END
@@ -21,7 +21,7 @@ BEGIN TRANSACTION
             FROM LICHSUKHAM
         )
         BEGIN
-            PRINT N'Không thấy lịch sử khám của ' + CAST (@MAKH AS VARCHAR(10))
+            PRINT N'Không thấy lịch sử khám của ' + CAST(@MAKH AS VARCHAR(10))
             ROLLBACK
             RETURN 0
         END
