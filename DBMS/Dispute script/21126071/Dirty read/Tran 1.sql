@@ -1,4 +1,7 @@
 ﻿USE dcBooking
 GO
 
-EXEC sp_xemLSK 1
+DECLARE @MATK INT
+DECLARE @MK INT
+EXEC sp_DangNhap '0338540248', '21126030', @MATK, @MK
+GO
