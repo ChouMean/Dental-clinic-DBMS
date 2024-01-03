@@ -1,12 +1,17 @@
 ﻿USE dcBooking
 GO
 
+DROP PROCEDURE sp_xemThuoc
+DROP PROCEDURE sp_xoaThuoc
+GO
+
 CREATE PROCEDURE sp_xemThuoc
 AS
 BEGIN TRANSACTION
-    BEGIN TRY
+	BEGIN TRY
         SELECT * FROM THUOC
-        WAITFOR DELAY '00:00:10'
+		WAITFOR DELAY '00:00:10'
+        SELECT * FROM THUOC
     END TRY
     BEGIN CATCH
         PRINT N'Lỗi hệ thống'
@@ -24,7 +29,6 @@ BEGIN TRANSACTION
     BEGIN TRY
         DELETE FROM THUOC
         WHERE MATH = @MATH
-        WAITFOR DELAY '00:00:10'
     END TRY
     BEGIN CATCH
         PRINT N'Lỗi hệ thống'

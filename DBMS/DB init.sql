@@ -51,7 +51,7 @@ INSERT INTO THUOC (TENTHUOC, DONVITINH, CHIDINH, NGAYHETHAN, SLKHO, DONGIA)
 VALUES
 	(N'Paracetamol', N'Viên', N'Uống', '2024-12-31', 100, 10),
 	(N'Oxi già', N'Tuýp', N'Bôi', '2024-12-31', 100, 10),
-	(N'Aataflam', N'Viên', N'Uống', '2024-12-31', 100, 10),
+	(N'Cataflam', N'Viên', N'Uống', '2024-12-31', 100, 10),
 	(N'Aspirin', N'Viên', N'Uống', '2024-12-31', 100, 10)
 GO
 

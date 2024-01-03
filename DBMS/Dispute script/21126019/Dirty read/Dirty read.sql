@@ -1,12 +1,60 @@
 ﻿USE dcBooking
 GO
 
+DROP PROCEDURE sp_doiTTThuoc
+DROP PROCEDURE sp_xuatHoaDon
+
+UPDATE LICHSUKHAM
+SET THANHTOAN = 0
+WHERE MAKH = 1
+GO
+
+CREATE PROCEDURE sp_doiTTThuoc
+    @MATH INT,
+    @TENTHUOC AS STEXT,
+    @DONVITINH AS XSTEXT,
+    @CHIDINH AS STEXT,
+    @NGAYHETHAN DATE,
+    @SLKHO INT,
+    @DONGIA FLOAT
+AS
+BEGIN TRANSACTION
+    BEGIN TRY
+        UPDATE THUOC
+        SET
+            TENTHUOC = @TENTHUOC,
+            DONVITINH = @DONVITINH,
+            CHIDINH = @CHIDINH,
+            NGAYHETHAN = @NGAYHETHAN,
+            SLKHO = @SLKHO,
+            DONGIA = @DONGIA
+        WHERE MATH = @MATH
+        WAITFOR DELAY '00:00:10'
+        
+		IF @NGAYHETHAN <= GETDATE()
+        BEGIN
+            PRINT N'Không thể thêm thuốc hết hạn'
+            ROLLBACK TRANSACTION
+            RETURN 0
+        END
+        PRINT N'Đổi thông tin thuốc thành công'
+    END TRY
+    BEGIN CATCH
+        PRINT N'Lỗi hệ thống'
+        ROLLBACK TRANSACTION
+        RETURN 0
+    END CATCH
+COMMIT TRANSACTION
+RETURN 1
+GO
+
 CREATE PROCEDURE sp_xuatHoaDon
     @MAKH INT,
     @MALSK INT
 AS
 BEGIN TRANSACTION
     BEGIN TRY
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
         IF NOT EXISTS (
             SELECT * FROM KHACHHANG
             WHERE MAKH = @MAKH
@@ -30,13 +78,13 @@ BEGIN TRANSACTION
         SET THANHTOAN = 1
         WHERE MAKH = @MAKH AND MALSK = @MALSK
 
-        SELECT DV.TENDICHVU AS 'Tên dv', DV.PHIKHAM AS 'Phí dv'
-        FROM DICVUSD DVSD, DICHVU DV
+        SELECT DV.TENDV AS 'Tên dv', DV.PHIKHAM AS 'Phí dv'
+        FROM DICHVUSD DVSD, DICHVU DV
         WHERE DVSD.MALSK = @MALSK AND DV.MADV = DVSD.MADV
         
         DECLARE @TONG FLOAT = (
             SELECT SUM(DV.PHIKHAM)
-            FROM DICVUSD DVSD, DICHVU DV
+            FROM DICHVUSD DVSD, DICHVU DV
             WHERE DVSD.MALSK = @MALSK AND DV.MADV = DVSD.MADV
         )
         
@@ -50,44 +98,6 @@ BEGIN TRANSACTION
             WHERE DT.MALSK = @MALSK AND TH.MATH = DT.MATH
         )
         PRINT N'Tổng chi phí: ' + CAST(@TONG AS VARCHAR(10))
-    END TRY
-    BEGIN CATCH
-        PRINT N'Lỗi hệ thống'
-        ROLLBACK TRANSACTION
-        RETURN 0
-    END CATCH
-COMMIT TRANSACTION
-RETURN 1
-GO
-
-CREATE PROCEDURE sp_doiTTThuoc
-    @MATH INT,
-    @TENTHUOC AS STEXT,
-    @DONVITINH AS XSTEXT,
-    @CHIDINH AS STEXT,
-    @NGAYHETHAN DATE,
-    @SLKHO INT,
-    @DONGIA FLOAT
-AS
-BEGIN TRANSACTION
-    BEGIN TRY
-        UPDATE THUOC
-        SET
-            TENTHUOC = @TENTHUOC,
-            DONVITINH = @DONVITINH,
-            CHIDINH = @CHIDINH,
-            NGAYHETHAN = @NGAYHETHAN,
-            SLKHO = @SLKHO,
-            DONGIA = @DONGIA
-        WHERE MATH = @MATH
-        IF @NGAYHETHAN <= GETDATE()
-        BEGIN
-            PRINT N'Không thể thêm thuốc hết hạn'
-            WAITFOR DELAY '00:00:10'
-            ROLLBACK TRANSACTION
-            RETURN 0
-        END
-        PRINT N'Đổi thông tin thuốc thành công'
     END TRY
     BEGIN CATCH
         PRINT N'Lỗi hệ thống'

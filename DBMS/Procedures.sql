@@ -3,6 +3,45 @@ GO
 
 -- 21126019
 -- Dirty read
+CREATE PROCEDURE sp_doiTTThuoc
+    @MATH INT,
+    @TENTHUOC AS STEXT,
+    @DONVITINH AS XSTEXT,
+    @CHIDINH AS STEXT,
+    @NGAYHETHAN DATE,
+    @SLKHO INT,
+    @DONGIA FLOAT
+AS
+BEGIN TRANSACTION
+    BEGIN TRY
+        UPDATE THUOC WITH (XLOCK)
+        SET
+            TENTHUOC = @TENTHUOC,
+            DONVITINH = @DONVITINH,
+            CHIDINH = @CHIDINH,
+            NGAYHETHAN = @NGAYHETHAN,
+            SLKHO = @SLKHO,
+            DONGIA = @DONGIA
+        WHERE MATH = @MATH
+        WAITFOR DELAY '00:00:10'
+		
+		IF @NGAYHETHAN <= GETDATE()
+        BEGIN
+            PRINT N'Không thể thêm thuốc hết hạn'
+            ROLLBACK TRANSACTION
+            RETURN 0
+        END
+        PRINT N'Đổi thông tin thuốc thành công'
+    END TRY
+    BEGIN CATCH
+        PRINT N'Lỗi hệ thống'
+        ROLLBACK TRANSACTION
+        RETURN 0
+    END CATCH
+COMMIT TRANSACTION
+RETURN 1
+GO
+
 CREATE PROCEDURE sp_xuatHoaDon
     @MAKH INT,
     @MALSK INT
@@ -33,13 +72,13 @@ BEGIN TRANSACTION
         SET THANHTOAN = 1
         WHERE MAKH = @MAKH AND MALSK = @MALSK
 
-        SELECT DV.TENDICHVU AS 'Tên dv', DV.PHIKHAM AS 'Phí dv'
-        FROM DICVUSD DVSD, DICHVU DV
+        SELECT DV.TENDV AS 'Tên dv', DV.PHIKHAM AS 'Phí dv'
+        FROM DICHVUSD DVSD, DICHVU DV
         WHERE DVSD.MALSK = @MALSK AND DV.MADV = DVSD.MADV
         
         DECLARE @TONG FLOAT = (
             SELECT SUM(DV.PHIKHAM)
-            FROM DICVUSD DVSD, DICHVU DV
+            FROM DICHVUSD DVSD, DICHVU DV
             WHERE DVSD.MALSK = @MALSK AND DV.MADV = DVSD.MADV
         )
         
@@ -63,44 +102,6 @@ COMMIT TRANSACTION
 RETURN 1
 GO
 
-CREATE PROCEDURE sp_doiTTThuoc
-    @MATH INT,
-    @TENTHUOC AS STEXT,
-    @DONVITINH AS XSTEXT,
-    @CHIDINH AS STEXT,
-    @NGAYHETHAN DATE,
-    @SLKHO INT,
-    @DONGIA FLOAT
-AS
-BEGIN TRANSACTION
-    BEGIN TRY
-        UPDATE THUOC WITH (XLOCK)
-        SET
-            TENTHUOC = @TENTHUOC,
-            DONVITINH = @DONVITINH,
-            CHIDINH = @CHIDINH,
-            NGAYHETHAN = @NGAYHETHAN,
-            SLKHO = @SLKHO,
-            DONGIA = @DONGIA
-        WHERE MATH = @MATH
-        IF @NGAYHETHAN <= GETDATE()
-        BEGIN
-            PRINT N'Không thể thêm thuốc hết hạn'
-            WAITFOR DELAY '00:00:10'
-            ROLLBACK TRANSACTION
-            RETURN 0
-        END
-        PRINT N'Đổi thông tin thuốc thành công'
-    END TRY
-    BEGIN CATCH
-        PRINT N'Lỗi hệ thống'
-        ROLLBACK TRANSACTION
-        RETURN 0
-    END CATCH
-COMMIT TRANSACTION
-RETURN 1
-GO
-
 -- Lost update
 CREATE PROCEDURE sp_datLichHen
     @MAKH INT,
@@ -112,7 +113,7 @@ BEGIN TRANSACTION
         SET TRANSACTION ISOLATION LEVEL READ COMMITTED
         IF NOT EXISTS (
             SELECT *
-            FROM NHASI NS, TAIKHOAN TK
+            FROM NHASI NS, TAIKHOAN TK WITH (XLOCK)
             WHERE NS.MANS = @MANS AND NS.MATK = TK.MATK AND TK.HOATDONG = 1
         )
         BEGIN
@@ -122,7 +123,7 @@ BEGIN TRANSACTION
         END
         IF NOT EXISTS (
             SELECT *
-            FROM LICHLAMVIEC LLV
+            FROM LICHLAMVIEC LLV WITH (XLOCK)
             WHERE LLV.MANS = @MANS AND LLV.BATDAU <= @THOIGIAN AND LLV.KETTHUC >= DATEADD(MINUTE, 15, @THOIGIAN)
         )
         BEGIN
@@ -132,7 +133,7 @@ BEGIN TRANSACTION
         END
         IF EXISTS (
             SELECT *
-            FROM LICHHEN LH
+            FROM LICHHEN LH WITH (XLOCK)
             WHERE LH.MANS = @MANS AND LH.THOIGIAN > DATEADD(MINUTE, -15, @THOIGIAN) AND LH.THOIGIAN < DATEADD(MINUTE, 15, @THOIGIAN)
         )
         BEGIN
@@ -140,12 +141,12 @@ BEGIN TRANSACTION
             ROLLBACK TRANSACTION
             RETURN 0
         END
+        WAITFOR DELAY '00:00:10'
 
         INSERT INTO LICHHEN (MAKH, MANS, THOIGIAN)
         VALUES (@MAKH, @MANS, @THOIGIAN)
         
         PRINT N'Đã thêm lịch hẹn thành công'
-        WAITFOR DELAY '00:00:10'
     END TRY
     BEGIN CATCH
         PRINT N'Lỗi hệ thống'
@@ -161,9 +162,10 @@ GO
 CREATE PROCEDURE sp_xemThuoc
 AS
 BEGIN TRANSACTION
-    BEGIN TRY
-        SELECT * FROM THUOC WITH (READCOMMITTED)
-        WAITFOR DELAY '00:00:10'
+	BEGIN TRY
+        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
+        SELECT * FROM THUOC
+		WAITFOR DELAY '00:00:10'
     END TRY
     BEGIN CATCH
         PRINT N'Lỗi hệ thống'
@@ -179,9 +181,8 @@ CREATE PROCEDURE sp_xoaThuoc
 AS
 BEGIN TRANSACTION
     BEGIN TRY
-        DELETE FROM THUOC WITH (XLOCK)
+        DELETE FROM THUOC
         WHERE MATH = @MATH
-        WAITFOR DELAY '00:00:10'
     END TRY
     BEGIN CATCH
         PRINT N'Lỗi hệ thống'
@@ -251,7 +252,6 @@ CREATE PROCEDURE sp_doiTrangThai
 AS
 BEGIN TRANSACTION
     BEGIN TRY
-        SET TRAN ISOLATION LEVEL READ COMMITTED
         IF NOT EXISTS (
             SELECT * FROM TAIKHOAN
             WHERE SDT = @SDT
@@ -278,23 +278,6 @@ GO
 
 -- 21126071
 -- Dirty read
-CREATE PROCEDURE sp_truyvanThuoc
-AS
-BEGIN TRANSACTION
-    BEGIN TRY
-        SET TRANSACTION ISOLATION LEVEL READ COMMITTED
-        SELECT * FROM THUOC
-        WAITFOR DELAY '00:00:10'
-    END TRY
-    BEGIN CATCH
-        PRINT N'Lỗi hệ thống'
-        ROLLBACK TRANSACTION
-        RETURN 0
-    END CATCH
-COMMIT TRANSACTION
-RETURN 1
-GO
-
 CREATE PROCEDURE sp_suaThuoc
     @MATH INT,
     @TENTHUOC AS STEXT,
@@ -306,7 +289,18 @@ CREATE PROCEDURE sp_suaThuoc
 AS
 BEGIN TRANSACTION
     BEGIN TRY
-        IF @NGAYHETHAN <= GETDATE()
+        UPDATE THUOC WITH (XLOCK)
+        SET
+            TENTHUOC = @TENTHUOC,
+            DONVITINH = @DONVITINH,
+            CHIDINH = @CHIDINH,
+            NGAYHETHAN = @NGAYHETHAN,
+            SLKHO = @SLKHO,
+            DONGIA = @DONGIA
+        WHERE MATH = @MATH
+        WAITFOR DELAY '00:00:10'
+		
+		IF @NGAYHETHAN <= GETDATE()
         BEGIN
             PRINT N'Không thể thêm thuốc hết hạn'
             ROLLBACK TRANSACTION
@@ -318,16 +312,23 @@ BEGIN TRANSACTION
             ROLLBACK TRANSACTION
             RETURN 0
         END
-        UPDATE THUOC WITH (XLOCK)
-        SET
-            TENTHUOC = @TENTHUOC,
-            DONVITINH = @DONVITINH,
-            CHIDINH = @CHIDINH,
-            NGAYHETHAN = @NGAYHETHAN,
-            SLKHO = @SLKHO,
-            DONGIA = @DONGIA
-        WHERE MATH = @MATH
         PRINT N'Đổi thông tin thuốc thành công'
+    END TRY
+    BEGIN CATCH
+        PRINT N'Lỗi hệ thống'
+        ROLLBACK TRANSACTION
+        RETURN 0
+    END CATCH
+COMMIT TRANSACTION
+RETURN 1
+GO
+
+CREATE PROCEDURE sp_truyvanThuoc
+AS
+BEGIN TRANSACTION
+    BEGIN TRY
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+        SELECT * FROM THUOC
     END TRY
     BEGIN CATCH
         PRINT N'Lỗi hệ thống'
@@ -350,7 +351,7 @@ CREATE TYPE THSD AS TABLE (
 )
 GO
 
-CREATE PROC sp_xemLSK
+CREATE PROCEDURE sp_xemLSK
     @MAKH INT
 AS
 BEGIN TRANSACTION
@@ -410,13 +411,13 @@ BEGIN TRANSACTION
         INSERT INTO LICHSUKHAM (MAKH, MANS, GHICHU)
         VALUES (@MAKH, @MANS, @GHICHU)
         
-        DECLARE @MALSK INT = (
-            SELECT MALSK
-            FROM LICHSUKHAM
-            WHERE MAKH = @MAKH AND MANS = @MANS
-        )
+        DECLARE @MALSK INT
+		
+		SELECT @MALSK = MALSK
+        FROM LICHSUKHAM
+        WHERE MAKH = @MAKH AND MANS = @MANS
 
-        INSERT INTO DICHVUSU (MALSK, MADV)
+        INSERT INTO DICHVUSD (MALSK, MADV)
         SELECT @MALSK, MADV
         FROM @DVSD
 

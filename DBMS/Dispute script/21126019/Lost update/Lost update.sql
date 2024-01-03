@@ -1,6 +1,11 @@
 ﻿USE dcBooking
 GO
 
+DROP PROCEDURE sp_datLichHen
+
+DELETE LICHHEN
+GO
+
 CREATE PROCEDURE sp_datLichHen
     @MAKH INT,
     @MANS INT,
@@ -8,6 +13,7 @@ CREATE PROCEDURE sp_datLichHen
 AS
 BEGIN TRANSACTION
     BEGIN TRY
+        SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
         IF NOT EXISTS (
             SELECT *
             FROM NHASI NS, TAIKHOAN TK
@@ -38,12 +44,12 @@ BEGIN TRANSACTION
             ROLLBACK TRANSACTION
             RETURN 0
         END
+        WAITFOR DELAY '00:00:10'
 
         INSERT INTO LICHHEN (MAKH, MANS, THOIGIAN)
         VALUES (@MAKH, @MANS, @THOIGIAN)
         
         PRINT N'Đã thêm lịch hẹn thành công'
-        WAITFOR DELAY '00:00:10'
     END TRY
     BEGIN CATCH
         PRINT N'Lỗi hệ thống'

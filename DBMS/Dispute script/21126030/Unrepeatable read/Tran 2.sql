@@ -1,5 +1,5 @@
 USE dcBooking
 GO
 
-EXEC sp_doiTrangThai '0338540248', 0
+EXEC sp_doiTrangThai '0916702097', 0
 GO
