@@ -75,30 +75,23 @@ GO
 
 INSERT INTO DONTHUOC (MALSK, MATH, SOLUONG, GHICHU)
 VALUES
-	(1, 1, 1, N''),
+	(1, 1, 1, N'Uống khi no'),
 	(1, 2, 1, N''),
-	(1, 3, 1, N''),
-	(2, 1, 1, N''),
+	(1, 3, 1, N'Uống tối'),
+	(2, 1, 1, N'Uống sau khi ăn'),
 	(2, 2, 1, N''),
 	(2, 3, 1, N'')
 GO
 
 INSERT INTO LICHHEN (MAKH, MANS, THOIGIAN)
 VALUES
-	(1, 1, ''),
-	(1, 2, ''),
-	(1, 3, ''),
-	(2, 1, ''),
-	(2, 2, ''),
-	(2, 3, '')
+	(1, 1, '2024-01-23 10:00:00AM')
 GO
 
-INSERT INTO DONTHUOC (MANS, BATDAU, KETTHUC)
+INSERT INTO LICHLAMVIEC (MANS, BATDAU, KETTHUC)
 VALUES
-	(1, '', ''),
-	(1, '', ''),
-	(1, '', ''),
-	(2, '', ''),
-	(2, '', ''),
-	(2, '', '')
+	(1, '2024-01-20 08:00:00 AM', '2024-01-20 04:00:00 PM'),
+	(1, '2024-01-21 08:00:00 AM', '2024-01-21 12:00:00 PM'),
+	(1, '2024-01-22 12:00:00 PM', '2024-01-22 04:00:00 PM'),
+	(1, '2024-01-23 10:00:00AM', '2024-01-23 02:00:00PM')
 GO
